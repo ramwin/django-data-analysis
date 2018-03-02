@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="/static/bootstrap/bootstrap.min.css">
+    <script src="/static/echarts.min.js"></script>
+    <script src="/static/vue.js"></script>
+  </head>
+  <body>
+    <h1>显示数据分析页面</h1>
+    <div><!--整个图表页面-->
+      <div class="row border" id="app"><!--选择框-->
+        <span class="col-md-1">选择表: </span>
+        <select class="form-control col-md-1 border">
+          {% for modeladmin in analysis_site.models %}
+          <option value="{{modeladmin.module_name}}.{{modeladmin.class_name}}">{{modeladmin.name}}</option>
+          {% endfor %}
+        </select>
+        <span class="col-md-1">开始时间: </span>
+        <input class="form-control col-md-2" type="datetime-local" name="starttime">
+        <span class="col-md-1">结束时间: </span>
+        <input class="form-control col-md-2" type="datetime-local" name="endtime">
+        <input class="form-control col-md-2" type="submit" v-on:click="refresh">
+      </div>
+      <div class="border" style="width: 1000px; height: 800px" id="chart">
+        这里显示图表
+      </div>
+    </div>
+    <script>
+      // 使用刚指定的配置项和数据显示图表。
+      var vm = new Vue({
+        el: "#app",
+        data: {
+          "option": {
+            title: {
+              text: 'ECharts 入门示例'
+            },
+            tooltip: {
+              trigger: 'axis',
+            },
+            toolbox: {
+            },
+            dataZoom: [
+              {
+              },
+              {
+                type: 'inside'
+              }
+            ],
+            xAxis: {
+              type: 'time',
+              splitLine: {
+                  show: false
+              }
+            },
+            yAxis: [
+              {
+                name: "总量",
+                type: 'value'
+              },
+              {
+                name: "增长量",
+                type: 'value'
+              },
+            ],
+            series: [
+              {
+                name: '总量',
+                type: 'bar',
+                data: [
+                  ['2017-01-01', 20],
+                  ['2017-01-02', 80],
+                  ['2017-01-03', 80],
+                  ['2017-01-04', 110],
+                  ['2017-01-05', 140],
+                  ['2017-01-06', 180],
+                  ['2017-01-07', 215],
+                  ['2017-01-08', 215],
+                ],
+              },
+              {
+                name: '增长量',
+                type: 'line',
+                data: [
+                  ['2017-01-01', 20],
+                  ['2017-01-02', 60],
+                  ['2017-01-04', 30],
+                  ['2017-01-05', 30],
+                  ['2017-01-06', 40],
+                  ['2017-01-07', 35],
+                ],
+                yAxisIndex: 1,
+              },
+            ]
+          },
+        },
+        delimiters: ["${", "}$"],
+        methods: {
+          refresh: function() {
+            console.log("刷新");
+            console.log(this.option);
+            var mychart = echarts.init(document.getElementById('chart'))
+            mychart.setOption(this.option);
+          }
+        },
+      });
+    </script>
+    <script src="/static/bootstrap/jquery-3.2.1.slim.min.js"></script>
+    <script src="/static/bootstrap/popper.min.js"></script>
+    <script src="/static/bootstrap/bootstrap.min.js"></script>
+  </body>
+</html>
