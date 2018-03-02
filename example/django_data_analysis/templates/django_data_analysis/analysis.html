@@ -10,23 +10,29 @@
   <body>
     <h1>显示数据分析页面</h1>
     <div><!--整个图表页面-->
-      <div class="row border" id="app"><!--选择框-->
+      <form method="POST" action="" class="row border" id="app">
         <span class="col-md-1">选择表: </span>
-        <select class="form-control col-md-1 border">
+        <select class="form-control col-md-1 border" v-model="filter.model">
           {% for modeladmin in analysis_site.models %}
-          <option value="{{modeladmin.module_name}}.{{modeladmin.class_name}}">{{modeladmin.name}}</option>
+          <option value="{{modeladmin.unique_name}}">{{modeladmin.name}}</option>
           {% endfor %}
         </select>
         <span class="col-md-1">开始时间: </span>
-        <input class="form-control col-md-2" type="datetime-local" name="starttime">
+        <input class="form-control col-md-2" type="datetime-local" name="starttime" value="2017-01-01T00:00:00" v-model="filter.starttime">
         <span class="col-md-1">结束时间: </span>
-        <input class="form-control col-md-2" type="datetime-local" name="endtime">
-        <input class="form-control col-md-2" type="submit" v-on:click="refresh">
-      </div>
+        <input class="form-control col-md-2" type="datetime-local" name="endtime" value="2017-01-01T00:00:00" v-model="filter.endtime">
+        <input class="form-control col-md-2" type="button" value="提交" v-on:click="refresh">
+        <input type="submit" hidden>
+      </form>
       <div class="border" style="width: 1000px; height: 800px" id="chart">
         这里显示图表
       </div>
     </div>
+    <script src="/static/bootstrap/jquery-3.2.1.slim.min.js"></script>
+    <script src="/static/jquery-3.1.0.js"></script>
+    <script src="/static/csrf_ajax.js"></script>
+    <script src="/static/bootstrap/popper.min.js"></script>
+    <script src="/static/bootstrap/bootstrap.min.js"></script>
     <script>
       // 使用刚指定的配置项和数据显示图表。
       var vm = new Vue({
@@ -94,6 +100,11 @@
               },
             ]
           },
+          "filter": {
+            "model": "",
+            "starttime": "2017-01-01T00:00:00",
+            "endtime": "2018-04-01T00:00:00",
+          },
         },
         delimiters: ["${", "}$"],
         methods: {
@@ -102,12 +113,21 @@
             console.log(this.option);
             var mychart = echarts.init(document.getElementById('chart'))
             mychart.setOption(this.option);
+            var scope = this
+            console.log(scope.filter)
+            $.ajax({
+                url: "",
+                method: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(scope.filter),
+                success: function(res) {
+                    debugger;
+                }
+            })
+            return;
           }
         },
       });
     </script>
-    <script src="/static/bootstrap/jquery-3.2.1.slim.min.js"></script>
-    <script src="/static/bootstrap/popper.min.js"></script>
-    <script src="/static/bootstrap/bootstrap.min.js"></script>
   </body>
 </html>

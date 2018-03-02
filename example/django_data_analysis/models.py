@@ -13,3 +13,6 @@ class Order(models.Model):
     price = models.IntegerField(default=1)
     total_price = models.IntegerField(default=1)
     amount = models.IntegerField(default=1)
+
+    class Meta:
+        verbose_name_plural = "订单"
