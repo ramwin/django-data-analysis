@@ -70,4 +70,14 @@ class AnalysisView(GenericAPIView):
         result = queryset.annotate(
                 date=TruncDate(modeladmin.time_field_name)).\
             values('date').annotate(Count(modeladmin.primary_key))
-        return Response(result)
+        data = {}
+        data["result"] = result
+        if serializer.validated_data["starttime"]:
+            params = {
+                "{}__lt".format(modeladmin.time_field_name):
+                    serializer.validated_data["starttime"],
+            }
+            data["old_balance"] = modeladmin.model.objects.filter(**params).count()
+        else:
+            data["old_balance"] = 0
+        return Response(data)

@@ -12,10 +12,8 @@
     <div><!--整个图表页面-->
       <form method="POST" action="" class="row border" id="app">
         <span class="col-md-1">选择表: </span>
-        <select class="form-control col-md-1 border" v-model="filter.model">
-          {% for modeladmin in analysis_site.models %}
-          <option value="{{modeladmin.unique_name}}">{{modeladmin.name}}</option>
-          {% endfor %}
+        <select class="form-control col-md-1 border" v-model="selected_model">
+          <option v-bind:value="modeladmin" v-for="modeladmin in models">${modeladmin.name}$ ${modeladmin.pk}$</option>
         </select>
         <span class="col-md-1">开始时间: </span>
         <input class="form-control col-md-2" type="datetime-local" name="starttime" value="2017-01-01T00:00:00" v-model="filter.starttime">
@@ -35,9 +33,53 @@
     <script src="/static/bootstrap/bootstrap.min.js"></script>
     <script>
       // 使用刚指定的配置项和数据显示图表。
+      function analysis_model_admin(
+          primary_key='pk', time_field_name='time', name='名称',
+          data=data
+          ){
+        this.primary_key = primary_key
+        this.time_field_name = time_field_name
+        this.name = name
+        this.old_balance = data["old_balance"]
+        this.get_series = function() {
+          console.log("get_series");
+          console.log(data)
+          var total = this.old_balance;
+          var total_list = []
+          var increate_list = []
+          for (var i=0; i<data["result"].length; i++) {
+            total = total + data["result"][i]["pk__count"]
+            total_list.push([data["result"][i]["date"], total])
+            increate_list.push([
+              data["result"][i]["date"], data["result"][i]["pk__count"]])
+          }
+          series = [
+            {
+              name: '总量',
+              type: 'bar',
+              data: total_list,
+            },
+            {
+              name: '增长量',
+              type: 'line',
+              data: increate_list,
+              yAxisIndex: 1,
+            },
+          ]
+          return series;
+        }
+      }
       var vm = new Vue({
         el: "#app",
         data: {
+          "models": [
+            {% for modeladmin in analysis_site.models %}
+              {"pk": "{{modeladmin.unique_name}}",
+               "name": "{{modeladmin.name}}",
+               "time_field_name": "{{modeladmin.time_field_name}}"},
+            {% endfor %}
+          ],
+          "selected_model": null,
           "option": {
             title: {
               text: 'ECharts 入门示例'
@@ -107,22 +149,37 @@
           },
         },
         delimiters: ["${", "}$"],
+        computed: {
+          filter_params: function() {
+            var filter = this.filter
+            filter["model"] = this.selected_model.pk
+            return filter
+          }
+        },
         methods: {
           refresh: function() {
             console.log("刷新");
             console.log(this.option);
-            var mychart = echarts.init(document.getElementById('chart'))
-            mychart.setOption(this.option);
             var scope = this
-            console.log(scope.filter)
+            console.log(scope.filter_params)
             $.ajax({
-                url: "",
-                method: "POST",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify(scope.filter),
-                success: function(res) {
-                    debugger;
-                }
+              url: "",
+              method: "POST",
+              contentType: "application/json; charset=utf-8",
+              data: JSON.stringify(scope.filter_params),
+              success: function(res) {
+                AnalysisModelAdmin = new analysis_model_admin(
+                  primary_key=scope.selected_model.primary_key,
+                  time_field_name=scope.selected_model.time_field_name,
+                  name=scope.selected_model.name,
+                  data=res
+                )
+                series = AnalysisModelAdmin.get_series()
+                scope.option["series"] = AnalysisModelAdmin.get_series()
+                var mychart = echarts.init(
+                  document.getElementById('chart'))
+                mychart.setOption(scope.option);
+              }
             })
             return;
           }
